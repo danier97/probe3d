@@ -37,7 +37,8 @@ class iBOT(torch.nn.Module):
             urlretrieve(download_path, ckpt_path)
 
         # load and cleanup state dict
-        state_dict = torch.load(ckpt_path)["state_dict"]
+        # state_dict = torch.load(ckpt_path)["state_dict"]
+        state_dict = torch.load(ckpt_path)
         state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
 
         # instantiate model
