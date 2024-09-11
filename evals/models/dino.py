@@ -1,6 +1,7 @@
 import torch
 
 from .utils import center_padding, tokens_to_output
+import sys
 
 
 class DINO(torch.nn.Module):
@@ -25,6 +26,9 @@ class DINO(torch.nn.Module):
         # get model
         self.model_name = dino_name
         self.checkpoint_name = f"{dino_name}_{model_name}"
+        # hacky workaround for issue caused by `import utils` in torch_cache/hub/facebookresearch_dino_main/vision_transformer.py
+        # see https://github.com/pytorch/hub/issues/243
+        sys.modules.pop('utils')
         dino_vit = torch.hub.load(f"facebookresearch/{dino_name}", self.checkpoint_name)
         self.vit = dino_vit.eval().to(torch.float32)
         self.has_registers = "_reg" in model_name
