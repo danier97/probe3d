@@ -22,7 +22,7 @@ class iBOT(torch.nn.Module):
 
         model_dict = {
             "base": ("ibot_vitb16", "vitb_16/checkpoint_teacher.pth"),
-            "base_in22k": ("ibot_vitb16_in22k", "vitb_16_22k/checkpoint_student.pth"),
+            "base_in22k": ("ibot_vitb16_in22k", "vitb_16_pt22k/checkpoint.pth"),
             "large": ("ibot_vitb16", "vitl_16/checkpoint_teacher.pth"),
             "large_22k": ("ibot_vitb16_in22k", "vitl_16_pt22k/checkpoint_student.pth"),
         }
