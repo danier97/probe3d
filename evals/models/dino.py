@@ -30,6 +30,7 @@ class DINO(torch.nn.Module):
         # see https://github.com/pytorch/hub/issues/243
         sys.modules.pop('utils')
         dino_vit = torch.hub.load(f"facebookresearch/{dino_name}", self.checkpoint_name)
+        sys.modules.pop('utils')
         self.vit = dino_vit.eval().to(torch.float32)
         self.has_registers = "_reg" in model_name
 
