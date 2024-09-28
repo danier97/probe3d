@@ -167,7 +167,7 @@ class SDFeaturizer(torch.nn.Module):
             sd_id, subfolder="scheduler"
         )
         gc.collect()
-        onestep_pipe = onestep_pipe.to("cuda")
+        onestep_pipe = onestep_pipe
         onestep_pipe.enable_attention_slicing()
         onestep_pipe.enable_xformers_memory_efficient_attention()
         # self.pipe = onestep_pipe
