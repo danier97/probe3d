@@ -22,7 +22,7 @@ class iBOT(torch.nn.Module):
 
         model_dict = {
             "base": ("ibot_vitb16", "vitb_16/checkpoint_teacher.pth"),
-            "base_in22k": ("ibot_vitb16_in22k", "vitb_16_pt22k/checkpoint.pth"),
+            "base_in22k": ("ibot_vitb16_in22k", "vitb_16_pt22k/checkpoint_student.pth"),
             "large": ("ibot_vitb16", "vitl_16/checkpoint_teacher.pth"),
             "large_22k": ("ibot_vitb16_in22k", "vitl_16_pt22k/checkpoint_student.pth"),
         }
@@ -37,15 +37,17 @@ class iBOT(torch.nn.Module):
             urlretrieve(download_path, ckpt_path)
 
         # load and cleanup state dict
-        # state_dict = torch.load(ckpt_path)["state_dict"]
         state_dict = torch.load(ckpt_path)
+        if "state_dict" in state_dict:
+            state_dict = state_dict["state_dict"]
         state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
 
         # instantiate model
         model_fn = vit_base if "base" in model_type else vit_large
         feat_dim = 768 if "base" in model_type else 1024
         vit = model_fn(patch_size=16, return_all_tokens=True)
-        vit.load_state_dict(state_dict, strict=False)
+        msg = vit.load_state_dict(state_dict, strict=False)
+        print (msg)
         vit.eval()
 
         # set parameters
