@@ -28,9 +28,7 @@ class DINO(torch.nn.Module):
         self.checkpoint_name = f"{dino_name}_{model_name}"
         # hacky workaround for issue caused by `import utils` in torch_cache/hub/facebookresearch_dino_main/vision_transformer.py
         # see https://github.com/pytorch/hub/issues/243
-        sys.modules.pop('utils')
         dino_vit = torch.hub.load(f"facebookresearch/{dino_name}", self.checkpoint_name)
-        sys.modules.pop('utils')
         self.vit = dino_vit.eval().to(torch.float32)
         self.has_registers = "_reg" in model_name
 

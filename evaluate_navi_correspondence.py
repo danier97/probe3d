@@ -92,7 +92,7 @@ def main(cfg: DictConfig):
     for i in tqdm(range(num_instances)):
         c_xyz0, c_xyz1, c_dist, c_uv0, c_uv1 = estimate_correspondence_xyz(
             feats_0[i], feats_1[i], xyz_grid_0[i], xyz_grid_1[i], cfg.num_corr
-        )
+        ) # (1000,3), (1000,3), (1000,), (1000,2), (1000,2)
 
         c_uv0 = c_uv0 / cfg.scale_factor
         c_uv1 = c_uv1 / cfg.scale_factor

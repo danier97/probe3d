@@ -50,7 +50,7 @@ def knn_points(X_f, Y_f, K=1, metric="euclidean"):
     _, X_nn = faiss_knn(X_f, Y_f, K)
 
     # n_points x k x F
-    X_f_nn = Y_f[X_nn]
+    X_f_nn = Y_f[X_nn] # (N,K,C) = (N,C)[N,K]
 
     if metric == "euclidean":
         dists = (X_f_nn - X_f[:, None, :]).norm(p=2, dim=3)
@@ -68,10 +68,10 @@ def get_correspondences_ratio_test(
     # output is cosine distance (0, 2)
     K = 2
 
-    dists_1, idx_1 = knn_points(P1_F, P2_F, K, metric)
+    dists_1, idx_1 = knn_points(P1_F, P2_F, K, metric) # (N,K), (N,K)
     idx_1 = idx_1[..., 0]
     if ratio_test:
-        weights_1 = calculate_ratio_test(dists_1)
+        weights_1 = calculate_ratio_test(dists_1) # (N,)
     else:
         weights_1 = dists_1[:, 0]
 
@@ -97,6 +97,9 @@ def get_correspondences_ratio_test(
         all_idx2 = torch.cat((m12_idx2, m21_idx2), dim=1)
         all_dist = torch.cat((m12_dist, m21_dist), dim=1)
     else:
+        # all_idx1: indices of all points in im1
+        # all_idx2: indices of best-matched points in im2
+        # all_dist: confidence of each match
         all_idx1, all_idx2, all_dist = get_topk_matches(weights_1, idx_1, num_corres)
 
     return all_idx1, all_idx2, all_dist
@@ -237,23 +240,23 @@ def estimate_correspondence_xyz(
 ):
     # upsample feats
     _, h, w = xyz_grid_0.shape
-    feat_0 = nn_F.interpolate(feat_0[None], size=(h, w), mode="bicubic")[0]
-    feat_1 = nn_F.interpolate(feat_1[None], size=(h, w), mode="bicubic")[0]
+    feat_0 = nn_F.interpolate(feat_0[None], size=(h, w), mode="bicubic")[0] # (C,H,W)
+    feat_1 = nn_F.interpolate(feat_1[None], size=(h, w), mode="bicubic")[0] # (C,H,W)
 
-    uvd_0 = get_grid(h, w).to(xyz_grid_0)
-    uvd_1 = get_grid(h, w).to(xyz_grid_1)
+    uvd_0 = get_grid(h, w).to(xyz_grid_0) # (3,H,W)
+    uvd_1 = get_grid(h, w).to(xyz_grid_1) # (3,H,W)
 
     # only keep values with real points
-    feat_0 = feat_0.permute(1, 2, 0)[xyz_grid_0[2] > 0]
-    feat_1 = feat_1.permute(1, 2, 0)[xyz_grid_1[2] > 0]
-    xyz_0 = xyz_grid_0.permute(1, 2, 0)[xyz_grid_0[2] > 0]
-    xyz_1 = xyz_grid_1.permute(1, 2, 0)[xyz_grid_1[2] > 0]
-    uvd_0 = uvd_0.permute(1, 2, 0)[xyz_grid_0[2] > 0]
-    uvd_1 = uvd_1.permute(1, 2, 0)[xyz_grid_1[2] > 0]
+    feat_0 = feat_0.permute(1, 2, 0)[xyz_grid_0[2] > 0] # (N,C)
+    feat_1 = feat_1.permute(1, 2, 0)[xyz_grid_1[2] > 0] # (N,C)
+    xyz_0 = xyz_grid_0.permute(1, 2, 0)[xyz_grid_0[2] > 0] # (N,3)
+    xyz_1 = xyz_grid_1.permute(1, 2, 0)[xyz_grid_1[2] > 0] # (N,3)
+    uvd_0 = uvd_0.permute(1, 2, 0)[xyz_grid_0[2] > 0] # (N,3)
+    uvd_1 = uvd_1.permute(1, 2, 0)[xyz_grid_1[2] > 0] # (N,3)
 
     idx0, idx1, c_dist = get_correspondences_ratio_test(
         feat_0, feat_1, num_corr, ratio_test=ratio_test
-    )
+    ) # (N,), (N,), (N,)
 
     c_xyz0 = xyz_0[idx0]
     c_xyz1 = xyz_1[idx1]
