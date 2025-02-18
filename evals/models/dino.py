@@ -88,3 +88,37 @@ class DINO(torch.nn.Module):
             outputs.append(x_i)
 
         return outputs[0] if len(outputs) == 1 else outputs
+
+    def forward_features(self, images, layers, feat_type):
+        layers = len(self.vit.blocks) -1 if layers == -1 else layers
+        if type(layers) != list:
+            layers = [layers]
+
+        # pad images (if needed) to ensure it matches patch_size
+        images = center_padding(images, self.patch_size)
+        h, w = images.shape[-2:]
+        h, w = h // self.patch_size, w // self.patch_size
+
+        if self.model_name == "dinov2":
+            x = self.vit.prepare_tokens_with_masks(images, None)
+        else:
+            x = self.vit.prepare_tokens(images)
+
+        embeds = []
+        for i, blk in enumerate(self.vit.blocks):
+            x = blk(x)
+            if i in layers:
+                embeds.append(x)
+                if len(embeds) == len(layers):
+                    break
+
+        num_spatial = h * w
+        outputs = []
+        for i, x_i in enumerate(embeds):
+            cls_tok = x_i[:, 0]
+            # ignoring register tokens
+            spatial = x_i[:, -1 * num_spatial :]
+            x_i = tokens_to_output(feat_type, spatial, cls_tok, (h, w))
+            outputs.append(x_i)
+
+        return outputs[0] if len(outputs) == 1 else torch.cat(outputs, dim=1)
