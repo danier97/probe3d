@@ -19,7 +19,7 @@ class SurfaceNormalHead(nn.Module):
 
         self.kernel_size = kernel_size
 
-        assert head_type in ["linear", "multiscale", "dpt"]
+        assert head_type in ["linear", "multiscale", "dpt", "conv"]
         name = f"snorm_{head_type}_k{kernel_size}"
         self.name = f"{name}_UA" if uncertainty_aware else name
 
@@ -29,6 +29,8 @@ class SurfaceNormalHead(nn.Module):
             self.head = MultiscaleHead(feat_dim, output_dim, hidden_dim, kernel_size)
         elif head_type == "dpt":
             self.head = DPT(feat_dim, output_dim, hidden_dim, kernel_size)
+        elif head_type == "conv":
+            self.head = ConvHead(feat_dim, output_dim, hidden_dim, kernel_size)
         else:
             raise ValueError(f"Unknown head type: {self.head_type}")
 
@@ -201,6 +203,35 @@ class DPT(nn.Module):
         out = self.ref_2(feats[2], out)
         out = self.ref_1(feats[1], out)
         out = self.ref_0(feats[0], out)
+
+        out = interpolate(out, scale_factor=4)
+        out = self.out_conv(out)
+        out = interpolate(out, scale_factor=2)
+        return out
+
+
+class ConvHead(nn.Module):
+    def __init__(self, input_dim, output_dim, hidden_dim=512, kernel_size=3):
+        """DPT head but only on a single layer"""
+        super().__init__()
+        self.conv_0 = nn.Conv2d(input_dim, hidden_dim, 1, padding=0)
+
+        self.ref_0 = FeatureFusionBlock(hidden_dim, kernel_size, with_skip=False)
+
+        self.out_conv = nn.Sequential(
+            nn.Conv2d(hidden_dim, hidden_dim, 3, padding=1),
+            nn.ReLU(True),
+            nn.Conv2d(hidden_dim, output_dim, 3, padding=1),
+        )
+
+    def forward(self, feats):
+        """Prediction each pixel."""
+
+        feats = self.conv_0(feats)
+
+        feats = interpolate(feats, scale_factor=2)
+
+        out = self.ref_0(feats, None)
 
         out = interpolate(out, scale_factor=4)
         out = self.out_conv(out)
