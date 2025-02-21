@@ -91,7 +91,7 @@ class DINO(torch.nn.Module):
 
     def forward_features(self, images, layers, feat_type):
         layers = len(self.vit.blocks) -1 if layers == -1 else layers
-        if type(layers) != list:
+        if type(layers) == int:
             layers = [layers]
 
         # pad images (if needed) to ensure it matches patch_size
@@ -121,4 +121,4 @@ class DINO(torch.nn.Module):
             x_i = tokens_to_output(feat_type, spatial, cls_tok, (h, w))
             outputs.append(x_i)
 
-        return outputs[0] if len(outputs) == 1 else torch.cat(outputs, dim=1)
+        return outputs[0] if len(outputs) == 1 else outputs
