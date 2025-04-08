@@ -83,7 +83,7 @@ class NYU_test(torch.utils.data.Dataset):
         self.depths = [data_dict["depths"][_i] for _i in self.indices]
         self.images = [data_dict["images"][_i] for _i in self.indices]
         self.scenes = [data_dict["scene_types"][_i][0] for _i in self.indices]
-        self.snorms = [data_dict["snorms"][_i] for _i in self.indices]
+        # self.snorms = [data_dict["snorms"][_i] for _i in self.indices]
 
         num_instances = len(self.indices)
         print(f"NYUv2 labeled test set: {num_instances} instances")

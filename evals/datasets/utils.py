@@ -160,7 +160,7 @@ def get_nyu_transforms(
                 A_transforms.HorizontalFlip(p=p_rotflip),
                 A_transforms.Rotate(limit=10, interpolation=0, p=p_rotflip),
                 A_transforms.RandomResizedCrop(
-                    _h, _w, scale=(0.5, 1.0), ratio=(1.0, 1.0), p=0.5, interpolation=0
+                    (_h, _w), scale=(0.5, 1.0), ratio=(1.0, 1.0), p=0.5, interpolation=0
                 ),
             ],
             additional_targets=additional_targets,
