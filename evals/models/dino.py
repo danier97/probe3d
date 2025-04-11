@@ -22,6 +22,7 @@ class DINO(torch.nn.Module):
             "vitl14": 1024,
             "vitg14": 1536,
         }
+        self.embedding_dim = feat_dims[model_name]
 
         # get model
         self.model_name = dino_name
