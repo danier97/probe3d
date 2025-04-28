@@ -72,7 +72,7 @@ class NYU_test(torch.utils.data.Dataset):
             image_size,
             False,
             rotateflip=False,
-            additional_targets={"depth": "image", "snorm": "image"},
+            additional_targets={"depth": "image"},# "snorm": "image"},
         )
 
         # parse data
@@ -94,7 +94,7 @@ class NYU_test(torch.utils.data.Dataset):
     def __getitem__(self, index):
         image = self.images[index]
         depth = self.depths[index]
-        snorm = self.snorms[index]
+        # snorm = self.snorms[index]
         room = self.scenes[index]
         nyu_index = self.indices[index]
 
@@ -109,16 +109,16 @@ class NYU_test(torch.utils.data.Dataset):
         if self.center_crop:
             image = image[..., 80:-80]
             depth = depth[..., 80:-80]
-            snorm = snorm[..., 80:-80]
+            # snorm = snorm[..., 80:-80]
 
         # move to tensor
         depth = torch.tensor(depth).float()[None, :, :]
-        snorm = torch.tensor(snorm).float()
+        # snorm = torch.tensor(snorm).float()
 
         return {
             "image": image,
             "depth": depth,
-            "snorm": snorm,
+            # "snorm": snorm,
             "room": room,
             "nyu_index": nyu_index,
         }
