@@ -87,7 +87,7 @@ class ScanNetPairsDataset(torch.utils.data.Dataset):
         return instances
 
     def __len__(self):
-        return 4#len(self.instances)
+        return len(self.instances)
 
     def __getitem__(self, index):
         s_id, ins_0, ins_1, K = self.instances[index]
