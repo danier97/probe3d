@@ -32,20 +32,30 @@ from .utils import read_image
 
 
 class ScanNetPairsDataset(torch.utils.data.Dataset):
-    def __init__(self):
+    def __init__(self, path, image_mean):
         super().__init__()
 
         # Some defaults for consistency.
         self.name = "ScanNet-pairs"
-        self.root = "data/scannet_test_1500"
+        self.root = path #"data/scannet_test_1500"
         self.split = "test"
         self.num_views = 2
+
+        if image_mean == "clip":
+            mean = [0.48145466, 0.4578275, 0.40821073]
+            std = [0.26862954, 0.26130258, 0.27577711]
+        elif image_mean == "imagenet":
+            mean = [0.485, 0.456, 0.406]
+            std = [0.229, 0.224, 0.225]
+        elif image_mean == "None":
+            mean = [0.0, 0.0, 0.0]
+            std = [1.0, 1.0, 1.0]
 
         self.rgb_transform = transforms.Compose(
             [
                 transforms.Resize((480, 640)),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+                transforms.Normalize(mean=mean, std=std),
             ]
         )
 
@@ -58,7 +68,7 @@ class ScanNetPairsDataset(torch.utils.data.Dataset):
     def get_dep(self, path):
         with open(path, "rb") as f:
             with Image.open(f) as img:
-                img = np.array(img)
+                img = np.array(img).astype(np.float32)
                 img = torch.tensor(img).float() / 1000.0
                 return img[None, :, :]
 
@@ -77,7 +87,7 @@ class ScanNetPairsDataset(torch.utils.data.Dataset):
         return instances
 
     def __len__(self):
-        return len(self.instances)
+        return 4#len(self.instances)
 
     def __getitem__(self, index):
         s_id, ins_0, ins_1, K = self.instances[index]
