@@ -52,7 +52,7 @@ class SPairDataset(torch.utils.data.Dataset):
 
     def __init__(
         self,
-        root,
+        path,
         split,
         image_size=512,
         image_mean="imagenet",
@@ -73,7 +73,7 @@ class SPairDataset(torch.utils.data.Dataset):
         super().__init__()
         assert split in ["train", "valid", "test"]
 
-        self.root = root
+        self.root = path
         self.split = split
         self.image_size = image_size
         self.use_bbox = use_bbox
@@ -84,8 +84,9 @@ class SPairDataset(torch.utils.data.Dataset):
         elif image_mean == "imagenet":
             mean = [0.485, 0.456, 0.406]
             std = [0.229, 0.224, 0.225]
-        else:
-            raise ValueError()
+        elif image_mean == "None":
+            mean = [0.0, 0.0, 0.0]
+            std = [1.0, 1.0, 1.0]
 
         self.image_transform = transforms.Compose(
             [
