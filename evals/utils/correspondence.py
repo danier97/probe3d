@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from torch.nn import functional as nn_F
 from torch.nn.functional import cosine_similarity
+from einops import rearrange
 
 res = faiss.StandardGpuResources()  # use a single GPU
 
@@ -253,6 +254,40 @@ def estimate_correspondence_xyz(
     xyz_1 = xyz_grid_1.permute(1, 2, 0)[xyz_grid_1[2] > 0] # (N,3)
     uvd_0 = uvd_0.permute(1, 2, 0)[xyz_grid_0[2] > 0] # (N,3)
     uvd_1 = uvd_1.permute(1, 2, 0)[xyz_grid_1[2] > 0] # (N,3)
+
+    idx0, idx1, c_dist = get_correspondences_ratio_test(
+        feat_0, feat_1, num_corr, ratio_test=ratio_test
+    ) # (N,), (N,), (N,)
+
+    c_xyz0 = xyz_0[idx0]
+    c_xyz1 = xyz_1[idx1]
+    c_uv0 = uvd_0[idx0][:, :2]
+    c_uv1 = uvd_1[idx1][:, :2]
+
+    return c_xyz0, c_xyz1, c_dist, c_uv0, c_uv1
+
+
+def estimate_correspondence_pointmap(
+    feat_0, feat_1, xyz_grid_0, xyz_grid_1, num_corr=500, ratio_test=True
+):
+    '''
+    Not filtering out points with z<=0 as point map in world coordinates.
+    '''
+    # upsample feats
+    _, h, w = xyz_grid_0.shape
+    feat_0 = nn_F.interpolate(feat_0[None], size=(h, w), mode="bicubic")[0] # (C,H,W)
+    feat_1 = nn_F.interpolate(feat_1[None], size=(h, w), mode="bicubic")[0] # (C,H,W)
+
+    uvd_0 = get_grid(h, w).to(xyz_grid_0) # (3,H,W)
+    uvd_1 = get_grid(h, w).to(xyz_grid_1) # (3,H,W)
+
+    # only keep values with real points
+    feat_0 = rearrange(feat_0, 'c h w -> (h w) c') # (N,C)
+    feat_1 = rearrange(feat_1, 'c h w -> (h w) c') # (N,C)
+    xyz_0 = rearrange(xyz_grid_0, 'c h w -> (h w) c') # (N,3)
+    xyz_1 = rearrange(xyz_grid_1, 'c h w -> (h w) c') # (N,3)
+    uvd_0 = rearrange(uvd_0, 'c h w -> (h w) c') # (N,3)
+    uvd_1 = rearrange(uvd_1, 'c h w -> (h w) c') # (N,3)
 
     idx0, idx1, c_dist = get_correspondences_ratio_test(
         feat_0, feat_1, num_corr, ratio_test=ratio_test
